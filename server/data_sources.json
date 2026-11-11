@@ -1,5 +1,5 @@
 {
-  "description": "Cấu hình danh sách các Server và API cung cấp dữ liệu thực tế cho trợ lý Lily (Xiaozhi AI)",
+  "description": "Cấu hình danh sách các Server và API cung cấp dữ liệu thực tế cho trợ lý Lily",
   "version": "1.0.0",
   "data_sources": {
     "gold_and_silver": {
@@ -86,4 +86,3 @@
     }
   }
 }
-

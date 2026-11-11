@@ -21,7 +21,7 @@ extern const char index_html_end[]   asm("_binary_index_html_end");
 static const char FALLBACK_INDEX_HTML[] = 
 "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\">"
 "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">"
-"<title>Xiaozhi AI Config</title><style>"
+"<title>Lily AI Config</title><style>"
 "body{background:#0f172a;color:#fff;font-family:sans-serif;display:flex;justify-content:center;padding:20px;}"
 ".c{background:#1e293b;padding:24px;border-radius:12px;max-width:400px;width:100%;box-shadow:0 4px 6px rgba(0,0,0,0.3);}"
 "h2{color:#38bdf8;text-align:center;margin-bottom:15px;}"
@@ -29,7 +29,7 @@ static const char FALLBACK_INDEX_HTML[] =
 "button{background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;border:none;margin-top:10px;}"
 "#res{margin-top:12px;padding:8px;border-radius:6px;display:none;font-size:13px;}"
 "</style></head><body><div class=\"c\">"
-"<h2>🤖 Cấu hình Xiaozhi AI</h2>"
+"<h2>🤖 Cấu hình Lily AI</h2>"
 "<label>Danh sách WiFi:</label>"
 "<select id=\"w\" onchange=\"document.getElementById('s').value=this.value\"><option>Đang quét...</option></select>"
 "<form onsubmit=\"save(event)\">"

@@ -255,7 +255,7 @@ async def serve_dashboard():
 async def api_status():
     return {
         "status": "online",
-        "service": "Xiaozhi AI Server (Local)",
+        "service": "LiLy AI Server (Local)",
         "ip": settings.SERVER_PUBLIC_URL,
         "tts_voice": settings.TTS_VOICE,
         "ollama_model": settings.OLLAMA_MODEL,
