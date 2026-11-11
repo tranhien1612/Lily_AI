@@ -1,0 +1,89 @@
+{
+  "description": "Cấu hình danh sách các Server và API cung cấp dữ liệu thực tế cho trợ lý Lily (Xiaozhi AI)",
+  "version": "1.0.0",
+  "data_sources": {
+    "gold_and_silver": {
+      "name": "Giá vàng và bạc trực tuyến",
+      "primary_api": "https://vang.today/api/prices",
+      "fallback_api": "https://api.btmc.vn/api/BTMCAPI/getpricebtmc?key=3kd8ub1kptnq16dtsc92mt8t",
+      "reference_web": "https://vang.today/vi/",
+      "reference_api_doc": "https://vang.today/vi/api",
+      "update_interval_seconds": 300,
+      "providers": {
+        "DOJI": {
+          "mieng": "DOHNL",
+          "nhan": "DOJINHTV",
+          "description": "Vàng miếng DOJI Hà Nội / TP.HCM & Vàng nhẫn tròn Hưng Thịnh Vượng"
+        },
+        "PNJ": {
+          "mieng": "PQHNVM",
+          "nhan": "PQHN24NTT",
+          "description": "Vàng miếng PNJ & Vàng nhẫn trơn PNJ 24K"
+        },
+        "BaoTinMinhChau": {
+          "mieng": "BTSJC",
+          "nhan": "BT9999NTT",
+          "description": "Vàng miếng SJC Bảo Tín & Vàng nhẫn tròn trơn Rồng Thăng Long 999.9"
+        },
+        "SJC": {
+          "mieng": "SJL1L10",
+          "nhan": "SJ9999",
+          "description": "Vàng miếng SJC 1 lượng & Vàng nhẫn SJC 99.99%"
+        },
+        "Silver_BTMC": {
+          "description": "Bạc miếng Phú Quý & Bạc Rồng Thăng Long Ag 999 1 lượng / 1 kg"
+        }
+      }
+    },
+    "weather": {
+      "name": "Thông tin thời tiết thực tế",
+      "primary_api": "https://wttr.in/{location}?lang=vi&format=j1",
+      "fallback_api": "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true",
+      "update_interval_seconds": 600,
+      "default_location": "Hà Nội"
+    },
+    "news": {
+      "name": "Điểm tin thời sự và tin tức mới nhất",
+      "channels": {
+        "vnexpress_latest": {
+          "name": "VnExpress - Tin mới nhất",
+          "url": "https://vnexpress.net/rss/tin-moi-nhat.rss"
+        },
+        "vnexpress_thoisu": {
+          "name": "VnExpress - Thời sự",
+          "url": "https://vnexpress.net/rss/thoi-su.rss"
+        },
+        "vnexpress_kinhdoanh": {
+          "name": "VnExpress - Kinh doanh",
+          "url": "https://vnexpress.net/rss/kinh-doanh.rss"
+        },
+        "vnexpress_congnghe": {
+          "name": "VnExpress - Số hóa & Công nghệ",
+          "url": "https://vnexpress.net/rss/so-hoa.rss"
+        },
+        "tuoitre_latest": {
+          "name": "Tuổi Trẻ - Tin mới nhất",
+          "url": "https://tuoitre.vn/rss/tin-moi-nhat.rss"
+        },
+        "thanhnien_latest": {
+          "name": "Thanh Niên - Tin tổng hợp",
+          "url": "https://thanhnien.vn/rss/home.rss"
+        }
+      },
+      "update_interval_seconds": 300
+    },
+    "music": {
+      "name": "Server tìm kiếm và tải bài hát",
+      "search_provider": "YouTube Audio (yt-dlp)",
+      "search_query_template": "bài hát {query} official audio",
+      "max_duration_seconds": 480,
+      "audio_format": "pcm_16000_16bit_mono",
+      "local_stream_base_url": "http://192.168.1.102:8000/music/"
+    },
+    "exchange_rate": {
+      "name": "Tỷ giá ngoại tệ",
+      "vietcombank_api": "https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx"
+    }
+  }
+}
+

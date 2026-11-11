@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Thiết Bị Xiaozhi AI</title>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-panel: #1e293b;
+      --bg-card: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --online: #22c55e;
+      --offline: #64748b;
+      --user-bubble: #1e3a8a;
+      --bot-bubble: #1e293b;
+      --border: #475569;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-main); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    
+    /* Top Bar */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: var(--primary); }
+    .brand span { font-size: 24px; }
+    .server-status { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--online); }
+
+    /* Main Container: 2-column layout */
+    .container { display: flex; flex: 1; height: calc(100vh - 57px); overflow: hidden; }
+
+    /* Devices Sidebar (Online Only) */
+    .sidebar {
+      width: 320px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sidebar-header h3 { font-size: 15px; font-weight: 600; }
+    .btn-refresh {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn-refresh:hover { background: var(--primary-hover); }
+    .device-list { flex: 1; overflow-y: auto; padding: 10px; }
+    .device-card {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .device-card:hover, .device-card.active {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .device-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .device-name { font-weight: 600; font-size: 14px; color: #fff; }
+    .pill {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .pill-online { background: rgba(34, 197, 94, 0.2); color: var(--online); border: 1px solid var(--online); }
+    .pill-offline { background: rgba(100, 116, 139, 0.2); color: var(--offline); border: 1px solid var(--offline); }
+    .device-meta { font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
+    .device-last-msg { font-size: 12px; color: #cbd5e1; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
+
+    /* Chat Area */
+    .chat-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-main);
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 12px 20px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-info h2 { font-size: 16px; font-weight: 600; }
+    .chat-info p { font-size: 12px; color: var(--text-muted); }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Message Bubbles */
+    .msg-group { display: flex; flex-direction: column; max-width: 75%; }
+    .msg-group.user { align-self: flex-end; align-items: flex-end; }
+    .msg-group.lily { align-self: flex-start; align-items: flex-start; }
+    
+    .msg-sender { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .msg-group.user .bubble {
+      background: var(--user-bubble);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+      border: 1px solid #3b82f6;
+    }
+    .msg-group.lily .bubble {
+      background: var(--bg-panel);
+      color: #f1f5f9;
+      border-bottom-left-radius: 2px;
+      border: 1px solid var(--border);
+    }
+    .audio-player { margin-top: 8px; width: 100%; min-width: 250px; }
+    audio { width: 100%; height: 36px; border-radius: 20px; outline: none; }
+    
+    .tool-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid #f59e0b;
+      color: #fbbf24;
+      font-family: monospace;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+    .empty-state .icon { font-size: 48px; }
+
+    /* Quick suggestions bar */
+    .quick-chips {
+      padding: 8px 16px;
+      background: var(--bg-panel);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .chip {
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .chip:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* Chat Input Bar */
+    .chat-input-bar {
+      padding: 12px 16px;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 12px 18px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .chat-input-bar input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+    .chat-input-bar input::placeholder {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .chat-input-bar button {
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      border-radius: 24px;
+      padding: 11px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .chat-input-bar button:hover:not(:disabled) {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
+    .chat-input-bar button:disabled {
+      background: var(--offline);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>🤖</span> Xiaozhi AI - Quản Lý Thiết Bị Cục Bộ (LAN)
+    </div>
+    <div class="server-status">
+      <div class="status-dot"></div> Server: Trực tuyến | IP: 192.168.1.102:8000
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Devices Sidebar (Online Only) -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h3>Thiết bị trực tuyến (<span id="dev-count">0</span>)</h3>
+        <button class="btn-refresh" onclick="loadDevices()">🔄 Tải lại</button>
+      </div>
+      <div class="device-list" id="device-list">
+        <div class="empty-state">
+          <p>Đang tìm thiết bị trực tuyến...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Chat View -->
+    <div class="chat-view">
+      <div class="chat-header">
+        <div class="chat-info">
+          <h2 id="active-dev-title">Chọn một thiết bị để xem đoạn chat</h2>
+          <p id="active-dev-sub">Theo dõi hội thoại giọng nói & văn bản thời gian thực</p>
+        </div>
+        <div id="active-status-badge"></div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages">
+        <div class="empty-state">
+          <div class="icon">💬</div>
+          <p>Nhấp vào một thiết bị ở danh sách bên trái để mở lịch sử chat và nghe giọng nói.</p>
+        </div>
+      </div>
+
+      <!-- Quick Action Chips -->
+      <div class="quick-chips">
+        <span class="chip" onclick="quickSend('Bật đèn')">💡 Bật đèn</span>
+        <span class="chip" onclick="quickSend('Tắt đèn')">🌑 Tắt đèn</span>
+        <span class="chip" onclick="quickSend('Tăng âm lượng')">🔊 Tăng âm</span>
+        <span class="chip" onclick="quickSend('Giảm âm lượng')">🔉 Giảm âm</span>
+        <span class="chip" onclick="quickSend('Phát bài Hãy Trao Cho Anh')">🎵 Hãy Trao Cho Anh</span>
+        <span class="chip" onclick="quickSend('Phát bài Lạc Trôi')">🎶 Lạc Trôi</span>
+        <span class="chip" onclick="quickSend('Dừng nhạc')">⏹️ Dừng nhạc</span>
+      </div>
+
+      <!-- Chat Input Bar -->
+      <div class="chat-input-bar">
+        <input 
+          type="text" 
+          id="chat-input" 
+          placeholder="Nhập tin nhắn để chat trực tiếp với Lily (thay vì nói qua micro)..." 
+          onkeydown="handleInputKeyDown(event)"
+          autocomplete="off"
+        />
+        <button id="btn-send" onclick="sendChatMessage()">
+          <span id="btn-send-text">Gửi</span>
+          <span id="btn-send-icon">🚀</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentDeviceId = null;
+    let pollInterval = null;
+    const renderedMsgIds = new Set();
+
+    async function loadDevices() {
+      try {
+        const res = await fetch('/api/devices?online_only=true');
+        const devices = await res.json();
+        const listDiv = document.getElementById('device-list');
+        document.getElementById('dev-count').innerText = devices.length;
+
+        if (devices.length === 0) {
+          listDiv.innerHTML = '<div class="empty-state"><p>Không có thiết bị nào đang trực tuyến.</p></div>';
+          document.getElementById('active-status-badge').innerHTML = '';
+          return;
+        }
+
+        listDiv.innerHTML = '';
+        devices.forEach(dev => {
+          const card = document.createElement('div');
+          card.className = `device-card ${dev.device_id === currentDeviceId ? 'active' : ''}`;
+          card.onclick = () => selectDevice(dev);
+
+          card.innerHTML = `
+            <div class="device-top">
+              <span class="device-name">📱 Xiaozhi S3 (${dev.ip})</span>
+              <span class="pill pill-online">🟢 Trực tuyến</span>
+            </div>
+            <div class="device-meta">
+              <span>IP: ${dev.ip}</span>
+              <span>Lần cuối: ${dev.last_seen}</span>
+            </div>
+            <div class="device-last-msg">💬 ${dev.last_message}</div>
+          `;
+          listDiv.appendChild(card);
+        });
+
+        // Auto select first device if none selected or previous one went offline
+        const devExists = devices.some(d => d.device_id === currentDeviceId);
+        if ((!currentDeviceId || !devExists) && devices.length > 0) {
+          selectDevice(devices[0]);
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải danh sách thiết bị:', err);
+      }
+    }
+
+    async function selectDevice(dev) {
+      if (currentDeviceId !== dev.device_id) {
+        currentDeviceId = dev.device_id;
+        renderedMsgIds.clear();
+        document.getElementById('chat-messages').innerHTML = '';
+      }
+
+      document.getElementById('active-dev-title').innerText = `📱 Xiaozhi S3 (${dev.ip})`;
+      document.getElementById('active-dev-sub').innerText = `Lần kết nối gần nhất: ${dev.last_seen}`;
+      document.getElementById('active-status-badge').innerHTML = `
+        <span class="pill pill-online">🟢 Trực tuyến</span>
+      `;
+
+      // Highlight active card
+      document.querySelectorAll('.device-card').forEach(el => el.classList.remove('active'));
+
+      await loadChatHistory(dev.device_id, true);
+
+      // Start auto poll every 2s for live chat updates
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        if (currentDeviceId) loadChatHistory(currentDeviceId, false);
+      }, 2000);
+    }
+
+    async function loadChatHistory(deviceId, forceScroll = false) {
+      try {
+        const res = await fetch(`/api/devices/${deviceId}/messages`);
+        const messages = await res.json();
+        const chatDiv = document.getElementById('chat-messages');
+
+        if (messages.length === 0) {
+          chatDiv.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Chưa có tin nhắn nào từ thiết bị này.</p></div>';
+          renderedMsgIds.clear();
+          return;
+        }
+
+        // If placeholder empty-state is currently showing, clear it
+        if (chatDiv.querySelector('.empty-state')) {
+          chatDiv.innerHTML = '';
+        }
+
+        let hasNewMessages = false;
+
+        messages.forEach(msg => {
+          if (!renderedMsgIds.has(msg.id)) {
+            renderedMsgIds.add(msg.id);
+            hasNewMessages = true;
+
+            const isUser = msg.sender === 'user';
+            const group = document.createElement('div');
+            group.className = `msg-group ${isUser ? 'user' : 'lily'}`;
+            group.id = msg.id;
+
+            let toolHtml = '';
+            if (msg.tool_call) {
+              const name = msg.tool_call.name || '';
+              let badgeText = `⚙️ [MCP Tool] ${name}`;
+              if (name === 'get_weather') badgeText = '🌤️ [MCP Tool] Tra cứu Thời tiết';
+              else if (name === 'get_gold_price') badgeText = '💰 [MCP Tool] Tra cứu Giá vàng';
+              else if (name === 'get_latest_news') badgeText = '📰 [MCP Tool] Điểm tin Thời sự';
+              else if (name === 'gpio_write') badgeText = '💡 [MCP Tool] Điều khiển Thiết bị';
+              else if (name === 'set_volume') badgeText = '🔊 [MCP Tool] Điều chỉnh Âm lượng';
+              else if (name === 'music_play') badgeText = '🎵 [MCP Tool] Phát Nhạc';
+              else if (name === 'music_stop') badgeText = '⏹️ [MCP Tool] Dừng Nhạc';
+              toolHtml = `<div class="tool-badge">${badgeText}</div>`;
+            }
+
+            group.innerHTML = `
+              <div class="msg-sender">
+                <span>${isUser ? '🧑 Người dùng' : '🤖 Lily AI'}</span>
+                <span>• ${msg.timestamp}</span>
+              </div>
+              <div class="bubble">
+                ${msg.text}
+                ${toolHtml}
+              </div>
+            `;
+            chatDiv.appendChild(group);
+          }
+        });
+
+        if (hasNewMessages || forceScroll) {
+          chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+      } catch (err) {
+        console.error('Lỗi khi tải lịch sử chat:', err);
+      }
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      if (!currentDeviceId) {
+        alert('Vui lòng chọn một thiết bị trực tuyến để chat.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-send');
+      const btnText = document.getElementById('btn-send-text');
+      const btnIcon = document.getElementById('btn-send-icon');
+
+      btn.disabled = true;
+      input.disabled = true;
+      btnText.innerText = 'Đang gửi...';
+      btnIcon.innerText = '⏳';
+
+      try {
+        const res = await fetch(`/api/devices/${currentDeviceId}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const result = await res.json();
+        input.value = '';
+        await loadChatHistory(currentDeviceId, true);
+      } catch (err) {
+        console.error('Lỗi khi gửi tin nhắn:', err);
+      } finally {
+        btn.disabled = false;
+        input.disabled = false;
+        btnText.innerText = 'Gửi';
+        btnIcon.innerText = '🚀';
+        input.focus();
+      }
+    }
+
+    function handleInputKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    }
+
+    function quickSend(cmd) {
+      const input = document.getElementById('chat-input');
+      input.value = cmd;
+      sendChatMessage();
+    }
+
+    // Initial load
+    window.onload = () => {
+      loadDevices();
+      setInterval(loadDevices, 3000); // Poll online devices every 3s
+    };
+  </script>
+</body>
+</html>
